@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Đặt hàng thành công - SNEAKERS VN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-20 px-6">
+    <div class="bg-white rounded-3xl shadow-xl p-12 max-w-lg w-full text-center">
+        <div class="text-7xl mb-6">🎉</div>
+        <h1 class="text-3xl font-bold text-green-600 mb-3">Đặt hàng thành công!</h1>
+        <p class="text-zinc-500 mb-8">Cảm ơn bạn đã mua hàng tại SNEAKERS VN. Email xác nhận đã được gửi đến bạn.</p>
+
+        {% if order %}
+        <div class="bg-zinc-50 rounded-2xl p-6 mb-8 text-left space-y-3">
+            <div class="flex justify-between">
+                <span class="text-zinc-500 text-sm">Mã đơn hàng</span>
+                <span class="font-bold text-black">{{ order.order_code }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-500 text-sm">Khách hàng</span>
+                <span class="font-medium">{{ order.customer_name }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-500 text-sm">Tổng tiền</span>
+                <span class="font-bold text-lg">{{ "{:,.0f}".format(order.total_amount) }} ₫</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-zinc-500 text-sm">Trạng thái</span>
+                <span class="bg-yellow-100 text-yellow-700 text-xs px-3 py-1 rounded-full font-medium">Chờ xử lý</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="flex gap-4 justify-center">
+            <a href="/" class="bg-black text-white px-8 py-3 rounded-2xl font-medium hover:bg-zinc-800 transition">
+                Về trang chủ
+            </a>
+            <a href="/order/my-orders" class="border border-black px-8 py-3 rounded-2xl font-medium hover:bg-zinc-50 transition">
+                Đơn hàng của tôi
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

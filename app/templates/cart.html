@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Giỏ hàng - SNEAKERS VN{% endblock %}
+
+{% block head %}
+<script>
+function removeFromCart(productId) {
+    if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
+        fetch('/cart/api/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId })
+        }).then(() => location.reload());
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12">
+    <h1 class="text-4xl font-bold mb-8">Giỏ hàng của bạn</h1>
+
+    {% if cart_items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Cart items -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-3xl p-6 shadow-sm">
+                {% for item in cart_items %}
+                <div class="flex items-center gap-5 py-5 border-b last:border-0">
+                    <img src="{{ url_for('static', filename='uploads/' + item.image) }}"
+                         class="w-20 h-20 object-cover rounded-2xl flex-shrink-0"
+                         onerror="this.src='https://placehold.co/80x80/f5f5f5/999?text=?'">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold truncate">{{ item.name }}</h3>
+                        <p class="text-zinc-500 text-sm mt-1">{{ "{:,.0f}".format(item.price) }} ₫ / đôi</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-zinc-500">x{{ item.quantity }}</span>
+                        <span class="font-bold text-lg whitespace-nowrap">{{ "{:,.0f}".format(item.price * item.quantity) }} ₫</span>
+                    </div>
+                    <button onclick="removeFromCart('{{ item.product_id }}')" 
+                            class="text-red-400 hover:text-red-600 transition ml-2 p-2">
+                        <i class="fa-solid fa-trash text-sm"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Order Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-3xl p-6 shadow-sm sticky top-24">
+                <h2 class="text-xl font-bold mb-6">Thông tin đặt hàng</h2>
+
+                <div class="flex justify-between text-sm text-zinc-500 mb-2">
+                    <span>Tạm tính</span>
+                    <span>{{ "{:,.0f}".format(total) }} ₫</span>
+                </div>
+                <div class="flex justify-between text-sm text-zinc-500 mb-4">
+                    <span>Phí vận chuyển</span>
+                    <span class="text-green-600">Miễn phí</span>
+                </div>
+                <div class="flex justify-between font-bold text-xl border-t pt-4 mb-6">
+                    <span>Tổng cộng</span>
+                    <span>{{ "{:,.0f}".format(total) }} ₫</span>
+                </div>
+
+                <form action="/order/checkout" method="POST" class="space-y-3">
+                    <input type="text" name="customer_name" placeholder="Họ và tên *" required
+                           class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm">
+
+                    <input type="tel" name="phone" placeholder="Số điện thoại *" required
+                           class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm">
+
+                    <input type="email" name="email" placeholder="Email nhận xác nhận *" required
+                           value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                           class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm">
+
+                    <textarea name="address" placeholder="Địa chỉ giao hàng *" required rows="3"
+                              class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm resize-none">{{ current_user.address if current_user.is_authenticated and current_user.address else '' }}</textarea>
+
+                    <textarea name="notes" placeholder="Ghi chú đơn hàng (tùy chọn)" rows="2"
+                              class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm resize-none"></textarea>
+
+                    <div class="bg-zinc-50 rounded-2xl p-3 text-sm text-zinc-600">
+                        <i class="fa-solid fa-truck mr-2"></i> Thanh toán khi nhận hàng (COD)
+                    </div>
+
+                    <button type="submit"
+                            class="w-full bg-black text-white py-4 rounded-2xl text-base font-semibold hover:bg-zinc-800 transition">
+                        Đặt hàng ngay →
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="text-center py-32">
+        <div class="text-8xl mb-6">🛍️</div>
+        <p class="text-2xl text-zinc-400 mb-2">Giỏ hàng của bạn đang trống</p>
+        <p class="text-zinc-400 mb-8">Hãy thêm sản phẩm vào giỏ để tiếp tục mua sắm</p>
+        <a href="/products" class="inline-block bg-black text-white px-10 py-4 rounded-3xl hover:bg-zinc-800 transition font-medium">
+            Mua sắm ngay
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

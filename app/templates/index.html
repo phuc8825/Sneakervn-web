@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ - SNEAKERS VN{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="bg-black text-white">
+    <div class="max-w-7xl mx-auto px-6 py-28">
+        <div class="max-w-2xl">
+            <p class="uppercase tracking-[6px] text-zinc-400 mb-4 text-sm">New Collection 2024</p>
+            <h1 class="text-6xl font-bold leading-tight">Sneakers<br>Made for You.</h1>
+            <p class="mt-6 text-zinc-300 text-lg max-w-md">Khám phá bộ sưu tập sneakers hiện đại, tối giản và đậm chất streetwear.</p>
+            <div class="flex gap-4 mt-10">
+                <a href="/products" class="bg-white text-black px-8 py-4 rounded-2xl font-semibold hover:bg-zinc-100 transition">
+                    Mua ngay
+                </a>
+                <a href="/products?category=Nam" class="border border-white text-white px-8 py-4 rounded-2xl font-semibold hover:bg-white hover:text-black transition">
+                    Bộ sưu tập Nam
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="max-w-7xl mx-auto px-6 py-16">
+    <div class="grid grid-cols-3 gap-4">
+        {% for cat, label in [('Nam', 'Giày Nam'), ('Nữ', 'Giày Nữ'), ('Unisex', 'Unisex')] %}
+        <a href="/products?category={{ cat }}" 
+           class="bg-white rounded-3xl p-8 text-center shadow-sm hover:shadow-lg transition group">
+           
+            <p class="font-semibold text-lg">{{ label }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- FEATURED PRODUCTS -->
+<section class="max-w-7xl mx-auto px-6 pb-20">
+    <div class="flex justify-between items-center mb-10">
+        <h2 class="text-4xl font-bold">Sản phẩm nổi bật</h2>
+        <a href="/products" class="text-zinc-500 hover:text-black transition">Xem tất cả →</a>
+    </div>
+
+    {% if products %}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+        <div class="bg-white rounded-3xl overflow-hidden shadow-sm product-card">
+            <div class="relative">
+                <img src="{{ url_for('static', filename=product.image_url) }}" 
+                     class="w-full h-64 object-cover"
+                     onerror="this.src='https://placehold.co/400x300/f5f5f5/999?text=No+Image'">
+                {% if product.stock <= 0 %}
+                <span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full">Hết hàng</span>
+                {% elif product.stock <= 5 %}
+                <span class="absolute top-3 left-3 bg-orange-400 text-white text-xs px-3 py-1 rounded-full">Còn {{ product.stock }}</span>
+                {% endif %}
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-zinc-400 mb-1">{{ product.category }}</p>
+                <h3 class="font-semibold text-base leading-tight">{{ product.name }}</h3>
+                <div class="mt-4 flex justify-between items-center">
+                    <span class="text-xl font-bold">{{ "{:,.0f}".format(product.price) }} ₫</span>
+                    <button onclick="addToCart('{{ product.id }}')"
+                            {% if product.stock <= 0 %}disabled{% endif %}
+                            class="bg-black text-white px-4 py-2.5 rounded-2xl text-sm hover:bg-zinc-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        {% if product.stock <= 0 %}Hết hàng{% else %}Thêm{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-zinc-400">
+        <p class="text-xl">Chưa có sản phẩm nào.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Quản lý đơn hàng - Admin{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-8">Quản lý đơn hàng</h1>
+
+<!-- Filter -->
+<div class="bg-white rounded-2xl p-4 shadow-sm mb-6">
+    <form action="/admin/orders" method="GET" class="flex flex-wrap gap-3 items-center">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm mã đơn, tên, SĐT..."
+               class="border border-zinc-200 rounded-xl px-4 py-2 text-sm focus:outline-none flex-1 min-w-48">
+        <select name="status" class="border border-zinc-200 rounded-xl px-4 py-2 text-sm focus:outline-none">
+            <option value="">Tất cả trạng thái</option>
+            {% set status_labels = {'pending': 'Chờ xử lý', 'confirmed': 'Đã xác nhận', 'shipping': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy'} %}
+            {% for s in statuses %}
+            <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>{{ status_labels.get(s, s) }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-black text-white px-5 py-2 rounded-xl text-sm hover:bg-zinc-800 transition">Lọc</button>
+        <a href="/admin/orders" class="border border-zinc-300 px-5 py-2 rounded-xl text-sm">Reset</a>
+        <span class="text-zinc-500 text-sm ml-auto">{{ orders|length }} đơn</span>
+    </form>
+</div>
+
+<!-- Orders Table -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-zinc-50">
+                <tr>
+                    {% for col in ['Mã đơn', 'Khách hàng', 'SĐT', 'Sản phẩm', 'Tổng tiền', 'Trạng thái', 'Ngày đặt', ''] %}
+                    <th class="px-5 py-4 text-left font-semibold text-zinc-600">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for order in orders %}
+                {% set label, color = order.get_status_label() %}
+                <tr class="hover:bg-zinc-50 transition">
+                    <td class="px-5 py-4 font-mono font-bold text-sm">{{ order.order_code }}</td>
+                    <td class="px-5 py-4">
+                        <p class="font-medium">{{ order.customer_name }}</p>
+                        <p class="text-xs text-zinc-400">{{ order.customer_email }}</p>
+                    </td>
+                    <td class="px-5 py-4 text-zinc-600">{{ order.customer_phone }}</td>
+                    <td class="px-5 py-4 text-zinc-500">{{ order.items|length }} sp</td>
+                    <td class="px-5 py-4 font-bold whitespace-nowrap">{{ "{:,.0f}".format(order.total_amount) }} ₫</td>
+                    <td class="px-5 py-4">
+                        <span class="text-xs px-3 py-1.5 rounded-full font-medium
+                            {% if color == 'yellow' %}bg-yellow-100 text-yellow-700
+                            {% elif color == 'blue' %}bg-blue-100 text-blue-700
+                            {% elif color == 'purple' %}bg-purple-100 text-purple-700
+                            {% elif color == 'green' %}bg-green-100 text-green-700
+                            {% elif color == 'red' %}bg-red-100 text-red-700
+                            {% else %}bg-zinc-100 text-zinc-700{% endif %}">
+                            {{ label }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-4 text-zinc-500">{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="px-5 py-4">
+                        <a href="/admin/orders/{{ order.id }}" class="text-xs bg-zinc-100 px-3 py-1.5 rounded-lg hover:bg-zinc-200 transition font-medium">
+                            Chi tiết
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="px-5 py-16 text-center text-zinc-400">Không có đơn hàng nào</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

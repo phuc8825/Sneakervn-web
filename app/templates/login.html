@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Đăng nhập - SNEAKERS VN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-zinc-100 py-16 px-4">
+    <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold">Đăng nhập</h2>
+            <p class="text-zinc-500 mt-2">Chào mừng bạn quay lại!</p>
+        </div>
+
+        <form method="POST" action="/auth/login" class="space-y-4">
+            <input type="email" name="email" placeholder="Email" required autocomplete="email"
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <input type="password" name="password" placeholder="Mật khẩu" required autocomplete="current-password"
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <button type="submit"
+                    class="w-full bg-black text-white py-4 rounded-2xl font-semibold text-base hover:bg-zinc-800 transition">
+                Đăng nhập
+            </button>
+        </form>
+
+        <p class="text-center mt-6 text-sm text-zinc-500">
+            Chưa có tài khoản?
+            <a href="/auth/register" class="text-black font-semibold hover:underline">Đăng ký ngay</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

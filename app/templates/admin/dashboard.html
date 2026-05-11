@@ -1,0 +1,77 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Dashboard - Admin SNEAKERS VN{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    {% for label, value, icon, color in [
+        ('Sản phẩm', total_products, 'fa-box', 'bg-blue-500'),
+        ('Đơn hàng', total_orders, 'fa-receipt', 'bg-purple-500'),
+        ('Chờ xử lý', pending_orders, 'fa-clock', 'bg-orange-500'),
+        ('Người dùng', total_users, 'fa-users', 'bg-green-500'),
+    ] %}
+    <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-zinc-500 text-sm font-medium">{{ label }}</p>
+            <div class="{{ color }} p-2.5 rounded-xl">
+                <i class="fa-solid {{ icon }} text-white text-sm"></i>
+            </div>
+        </div>
+        <p class="text-3xl font-bold">{{ value }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Revenue -->
+<div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
+    <p class="text-zinc-500 text-sm font-medium mb-2">Doanh thu (đơn đã giao)</p>
+    <p class="text-4xl font-bold text-green-600">{{ "{:,.0f}".format(total_revenue) }} ₫</p>
+</div>
+
+<!-- Recent Orders -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div class="flex justify-between items-center p-6 border-b">
+        <h2 class="text-xl font-bold">Đơn hàng gần đây</h2>
+        <a href="/admin/orders" class="text-sm text-zinc-500 hover:text-black transition">Xem tất cả →</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-zinc-50">
+                <tr>
+                    {% for col in ['Mã đơn', 'Khách hàng', 'Tổng tiền', 'Trạng thái', 'Ngày đặt'] %}
+                    <th class="px-6 py-4 text-left font-semibold text-zinc-600">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for order in recent_orders %}
+                {% set label, color = order.get_status_label() %}
+                <tr class="hover:bg-zinc-50 transition">
+                    <td class="px-6 py-4 font-mono font-bold">{{ order.order_code }}</td>
+                    <td class="px-6 py-4">
+                        <p class="font-medium">{{ order.customer_name }}</p>
+                        <p class="text-zinc-400 text-xs">{{ order.customer_phone }}</p>
+                    </td>
+                    <td class="px-6 py-4 font-semibold">{{ "{:,.0f}".format(order.total_amount) }} ₫</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-3 py-1.5 rounded-full font-medium
+                            {% if color == 'yellow' %}bg-yellow-100 text-yellow-700
+                            {% elif color == 'blue' %}bg-blue-100 text-blue-700
+                            {% elif color == 'green' %}bg-green-100 text-green-700
+                            {% elif color == 'red' %}bg-red-100 text-red-700
+                            {% else %}bg-zinc-100 text-zinc-700{% endif %}">
+                            {{ label }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-zinc-500">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="px-6 py-10 text-center text-zinc-400">Chưa có đơn hàng nào</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

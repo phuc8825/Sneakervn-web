@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Đăng ký - SNEAKERS VN{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-zinc-100 py-16 px-4">
+    <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold">Tạo tài khoản</h2>
+            <p class="text-zinc-500 mt-2">Tham gia cộng đồng SNEAKERS VN</p>
+        </div>
+
+        <form method="POST" action="/auth/register" class="space-y-4">
+            <input type="text" name="name" placeholder="Họ và tên" required
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <input type="email" name="email" placeholder="Email" required
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <input type="tel" name="phone" placeholder="Số điện thoại (tùy chọn)"
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <input type="password" name="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required minlength="6"
+                   class="w-full border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:border-black transition text-sm">
+            <button type="submit"
+                    class="w-full bg-black text-white py-4 rounded-2xl font-semibold text-base hover:bg-zinc-800 transition">
+                Đăng ký
+            </button>
+        </form>
+
+        <p class="text-center mt-6 text-sm text-zinc-500">
+            Đã có tài khoản?
+            <a href="/auth/login" class="text-black font-semibold hover:underline">Đăng nhập</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

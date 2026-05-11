@@ -1,0 +1,65 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Quản lý người dùng - Admin{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-8">Quản lý người dùng</h1>
+
+<div class="bg-white rounded-2xl p-4 shadow-sm mb-6">
+    <form action="/admin/users" method="GET" class="flex gap-3">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm theo tên hoặc email..."
+               class="border border-zinc-200 rounded-xl px-4 py-2 text-sm focus:outline-none flex-1">
+        <button type="submit" class="bg-black text-white px-5 py-2 rounded-xl text-sm hover:bg-zinc-800 transition">Tìm</button>
+        <a href="/admin/users" class="border border-zinc-300 px-5 py-2 rounded-xl text-sm">Reset</a>
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-zinc-50">
+                <tr>
+                    {% for col in ['ID', 'Tên', 'Email', 'SĐT', 'Vai trò', 'Ngày đăng ký', 'Trạng thái', ''] %}
+                    <th class="px-5 py-4 text-left font-semibold text-zinc-600">{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for user in users %}
+                <tr class="hover:bg-zinc-50 transition {% if not user.is_active %}opacity-50{% endif %}">
+                    <td class="px-5 py-4 font-mono text-zinc-400">#{{ user.id }}</td>
+                    <td class="px-5 py-4 font-semibold">{{ user.name }}</td>
+                    <td class="px-5 py-4 text-zinc-600">{{ user.email }}</td>
+                    <td class="px-5 py-4 text-zinc-600">{{ user.phone or '-' }}</td>
+                    <td class="px-5 py-4">
+                        {% if user.is_admin() %}
+                        <span class="bg-black text-white text-xs px-3 py-1 rounded-full">Admin</span>
+                        {% else %}
+                        <span class="bg-zinc-100 text-zinc-600 text-xs px-3 py-1 rounded-full">User</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-4 text-zinc-500">{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                    <td class="px-5 py-4">
+                        <span class="text-xs px-3 py-1 rounded-full {% if user.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {% if user.is_active %}Hoạt động{% else %}Đã khóa{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-5 py-4">
+                        {% if not user.is_admin() %}
+                        <form action="/admin/users/{{ user.id }}/toggle" method="POST">
+                            <button type="submit"
+                                    class="text-xs px-3 py-1.5 rounded-lg border transition
+                                    {% if user.is_active %}border-red-200 text-red-600 hover:bg-red-50{% else %}border-green-200 text-green-600 hover:bg-green-50{% endif %}">
+                                {% if user.is_active %}Khóa{% else %}Kích hoạt{% endif %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="px-5 py-16 text-center text-zinc-400">Không có người dùng nào</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SNEAKERS VN{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .product-card { transition: all 0.3s; }
+        .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-zinc-50 text-zinc-900">
+
+<!-- Navbar -->
+<nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold tracking-tight">
+            SNEAKERS <span class="text-xs bg-black text-white px-2 py-1 rounded">VN</span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+            <a href="/products" class="hover:text-black transition">Tất cả giày</a>
+            <a href="/products?category=Nam" class="hover:text-black transition">Nam</a>
+            <a href="/products?category=Nữ" class="hover:text-black transition">Nữ</a>
+            <a href="/products?category=Unisex" class="hover:text-black transition">Unisex</a>
+        </div>
+
+        <div class="flex items-center gap-5">
+            <!-- Search -->
+            <form action="/products" method="GET" class="hidden md:flex items-center">
+                <input type="text" name="q" placeholder="Tìm kiếm..." 
+                       class="border border-zinc-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-black w-40 transition-all focus:w-52">
+            </form>
+
+            <!-- Cart -->
+            <a href="/cart" class="relative hover:scale-110 transition">
+                <i class="fa-solid fa-bag-shopping text-xl"></i>
+                <span id="cart-count" class="absolute -top-1 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">0</span>
+            </a>
+
+            {% if current_user.is_authenticated %}
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium hidden md:block">{{ current_user.name }}</span>
+                    {% if current_user.is_admin() %}
+                        <a href="/admin/dashboard" class="text-xs bg-black text-white px-3 py-1.5 rounded-lg hover:bg-zinc-700 transition">Admin</a>
+                    {% endif %}
+                    <a href="/order/my-orders" class="text-sm hover:underline hidden md:block">Đơn hàng</a>
+                    <a href="/auth/logout" class="text-red-600 hover:text-red-700 text-sm">Đăng xuất</a>
+                </div>
+            {% else %}
+                <a href="/auth/login" class="bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-zinc-800 transition">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-6 pt-4">
+        {% for category, message in messages %}
+        <div class="mb-3 p-4 rounded-2xl font-medium flex items-center justify-between
+            {% if category == 'success' %}bg-green-50 text-green-700 border border-green-200
+            {% elif category == 'danger' %}bg-red-50 text-red-700 border border-red-200
+            {% elif category == 'warning' %}bg-yellow-50 text-yellow-700 border border-yellow-200
+            {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 ml-4">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<!-- Footer -->
+<footer class="bg-black text-zinc-400 mt-20 py-12">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <p class="text-white text-xl font-bold mb-2">SNEAKERS VN</p>
+        <p class="text-sm">© 2024 Sneakers VN. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    const isLoggedIn = JSON.parse('{{ current_user.is_authenticated | tojson }}');
+
+    async function addToCart(productId) {
+        if (!isLoggedIn) {
+            if (confirm("Vui lòng đăng nhập để thêm vào giỏ hàng!")) {
+                window.location.href = "/auth/login";
+            }
+            return;
+        }
+        try {
+            const res = await fetch('/cart/api/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast('✅ ' + (data.message || 'Đã thêm vào giỏ hàng!'));
+                updateCartCount();
+            } else {
+                showToast('❌ ' + (data.message || 'Không thể thêm sản phẩm!'), true);
+            }
+        } catch (e) {
+            showToast('❌ Lỗi kết nối!', true);
+        }
+    }
+
+    async function updateCartCount() {
+        if (!isLoggedIn) return;
+        try {
+            const res = await fetch('/cart/api/count');
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('cart-count').textContent = data.count || 0;
+            }
+        } catch (e) {}
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-6 right-6 z-50 px-6 py-4 rounded-2xl shadow-lg font-medium text-white transition-all ${isError ? 'bg-red-500' : 'bg-zinc-900'}`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    window.onload = updateCartCount;
+</script>
+</body>
+</html>
