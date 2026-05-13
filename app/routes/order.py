@@ -105,7 +105,7 @@ def checkout():
     # Xóa giỏ hàng
     session.pop('cart', None)
 
-    flash(f'✅ Đặt hàng thành công! Mã đơn hàng: {order_code}', 'success')
+    flash(f' Đặt hàng thành công! Mã đơn hàng: {order_code}', 'success')
     return redirect(url_for('order.order_success', code=order_code))
 
 
