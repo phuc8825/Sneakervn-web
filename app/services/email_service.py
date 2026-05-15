@@ -3,10 +3,9 @@ from flask import current_app
 from app import mail
 
 
-def send_order_email(to_email, order_code, items, total, customer_name, phone, address):
-    """Gửi email xác nhận đơn hàng cho khách."""
+def send_order_email(to_email, order_code, items, total, customer_name, phone, tenant):
     msg = Message(
-        subject=f'Xác nhận đơn hàng #{order_code} - SNEAKERS VN',
+        subject=f'Xác nhận giao dịch #{order_code} - {tenant.name}',
         sender=current_app.config.get('MAIL_USERNAME'),
         recipients=[to_email]
     )
@@ -26,18 +25,19 @@ def send_order_email(to_email, order_code, items, total, customer_name, phone, a
     msg.html = f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:#000;padding:24px;text-align:center;">
-            <h1 style="color:#fff;margin:0;">SNEAKERS VN</h1>
+            <h1 style="color:#fff;margin:0;">{tenant.name}</h1>
         </div>
 
         <div style="padding:32px;">
-            <h2 style="color:#1a1a1a;">🎉 Đặt hàng thành công!</h2>
+            <h2 style="color:#1a1a1a;">🎉 Giao dịch thành công!</h2>
             <p>Xin chào <strong>{customer_name}</strong>,</p>
-            <p>Đơn hàng của bạn đã được xác nhận. Chúng tôi sẽ liên hệ sớm nhất có thể.</p>
+            <p>Giao dịch của bạn đã được hoàn thành. Cảm ơn bạn đã mua sắm tại {tenant.name}!</p>
 
             <div style="background:#f5f5f5;border-radius:12px;padding:20px;margin:24px 0;">
-                <p style="margin:0 0 8px;"><strong>Mã đơn hàng:</strong> {order_code}</p>
+                <p style="margin:0 0 8px;"><strong>Mã giao dịch:</strong> {order_code}</p>
                 <p style="margin:0 0 8px;"><strong>Số điện thoại:</strong> {phone}</p>
-                <p style="margin:0;"><strong>Địa chỉ giao hàng:</strong> {address}</p>
+                <p style="margin:0 0 8px;"><strong>Cửa hàng:</strong> {tenant.name}</p>
+                <p style="margin:0;"><strong>Địa chỉ:</strong> {tenant.address or ''}</p>
             </div>
 
             <table style="width:100%;border-collapse:collapse;">
@@ -62,7 +62,7 @@ def send_order_email(to_email, order_code, items, total, customer_name, phone, a
         </div>
 
         <div style="background:#f5f5f5;padding:20px;text-align:center;color:#666;font-size:13px;">
-            © 2024 SNEAKERS VN — Cảm ơn bạn đã tin tưởng mua sắm!
+            © 2024 {tenant.name} — Cảm ơn bạn đã tin tưởng mua sắm!
         </div>
     </div>
     """

@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.models.user import User
+from app.models.tenant import Tenant
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -44,6 +45,14 @@ def register():
         password = request.form.get('password', '')
         phone = request.form.get('phone', '').strip()
 
+        tenant_option = request.form.get('tenant_option', 'new')
+        tenant_id = request.form.get('tenant_id', '')
+
+        shop_name = request.form.get('shop_name', '').strip()
+        shop_email = request.form.get('shop_email', '').strip()
+        shop_phone = request.form.get('shop_phone', '').strip()
+        shop_address = request.form.get('shop_address', '').strip()
+
         if not email or not name or not password:
             flash('Vui lòng điền đầy đủ thông tin!', 'danger')
             return render_template('register.html')
@@ -52,19 +61,46 @@ def register():
             flash('Email đã được sử dụng!', 'danger')
             return render_template('register.html')
 
-        user = User(
-            email=email,
-            name=name,
-            phone=phone,
-            password=generate_password_hash(password)
-        )
-        db.session.add(user)
-        db.session.commit()
+        try:
+            if tenant_option == 'new':
+                if not shop_name or not shop_email:
+                    flash('Vui lòng nhập tên và email cửa hàng!', 'danger')
+                    return render_template('register.html')
 
-        flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
-        return redirect(url_for('auth.login'))
+                tenant = Tenant(
+                    name=shop_name,
+                    email=shop_email,
+                    phone=shop_phone,
+                    address=shop_address
+                )
+                db.session.add(tenant)
+                db.session.flush()
+            else:
+                tenant = Tenant.query.get(int(tenant_id))
+                if not tenant:
+                    flash('Cửa hàng không tồn tại!', 'danger')
+                    return render_template('register.html')
 
-    return render_template('register.html')
+            user = User(
+                email=email,
+                name=name,
+                phone=phone,
+                password=generate_password_hash(password),
+                tenant_id=tenant.id,
+                role='owner' if tenant_option == 'new' else 'staff'
+            )
+            db.session.add(user)
+            db.session.commit()
+
+            flash('Đăng ký thành công! Vui lòng đăng nhập.', 'success')
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi đăng ký: {str(e)}', 'danger')
+            return render_template('register.html')
+
+    tenants = Tenant.query.filter_by(is_active=True).all()
+    return render_template('register.html', tenants=tenants)
 
 
 @auth_bp.route('/logout')

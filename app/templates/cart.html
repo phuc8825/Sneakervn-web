@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Giỏ hàng - SNEAKERS VN{% endblock %}
+{% block title %}Thanh toán - SaaS PoS{% endblock %}
 
 {% block head %}
 <script>
@@ -17,7 +17,7 @@ function removeFromCart(productId) {
 
 {% block content %}
 <div class="max-w-6xl mx-auto px-6 py-12">
-    <h1 class="text-4xl font-bold mb-8">Giỏ hàng của bạn</h1>
+    <h1 class="text-4xl font-bold mb-8">Giỏ hàng</h1>
 
     {% if cart_items %}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -71,23 +71,17 @@ function removeFromCart(productId) {
                     <input type="tel" name="phone" placeholder="Số điện thoại *" required
                            class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm">
 
-                    <input type="email" name="email" placeholder="Email nhận xác nhận *" required
+                    <input type="email" name="email" placeholder="Email nhận hóa đơn *" required
                            value="{{ current_user.email if current_user.is_authenticated else '' }}"
                            class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm">
 
-                    <textarea name="address" placeholder="Địa chỉ giao hàng *" required rows="3"
-                              class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm resize-none">{{ current_user.address if current_user.is_authenticated and current_user.address else '' }}</textarea>
-
-                    <textarea name="notes" placeholder="Ghi chú đơn hàng (tùy chọn)" rows="2"
-                              class="w-full border border-zinc-200 p-3.5 rounded-2xl focus:outline-none focus:border-black text-sm resize-none"></textarea>
-
                     <div class="bg-zinc-50 rounded-2xl p-3 text-sm text-zinc-600">
-                        <i class="fa-solid fa-truck mr-2"></i> Thanh toán khi nhận hàng (COD)
+                        <i class="fa-solid fa-money-bill mr-2"></i> COD - Thanh toán khi nhận hàng
                     </div>
 
                     <button type="submit"
                             class="w-full bg-black text-white py-4 rounded-2xl text-base font-semibold hover:bg-zinc-800 transition">
-                        Đặt hàng ngay →
+                        Hoàn thành giao dịch →
                     </button>
                 </form>
             </div>

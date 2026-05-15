@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify, session, render_template
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.models.product import Product
+from app.utils.decorators import tenant_required
 
 cart_bp = Blueprint('cart', __name__)
 
 
 @cart_bp.route('/')
 @login_required
+@tenant_required
 def cart_page():
     cart_items = session.get('cart', [])
     total = sum(item['price'] * item['quantity'] for item in cart_items)
@@ -15,11 +17,12 @@ def cart_page():
 
 @cart_bp.route('/api/add', methods=['POST'])
 @login_required
+@tenant_required
 def add_to_cart():
     data = request.get_json()
     product_id = data.get('product_id')
 
-    product = Product.query.filter_by(id=product_id, is_active=True).first()
+    product = Product.query.filter_by(id=product_id, is_active=True, tenant_id=current_user.tenant_id).first()
     if not product:
         return jsonify({'success': False, 'message': 'Không tìm thấy sản phẩm'}), 404
 
@@ -29,7 +32,6 @@ def add_to_cart():
     if 'cart' not in session:
         session['cart'] = []
 
-    # Tăng số lượng nếu đã có trong giỏ
     for item in session['cart']:
         if item['product_id'] == product_id:
             if item['quantity'] >= product.stock:
@@ -38,7 +40,6 @@ def add_to_cart():
             session.modified = True
             return jsonify({'success': True, 'message': 'Đã cập nhật giỏ hàng'})
 
-    # Thêm mới
     session['cart'].append({
         'product_id': product.id,
         'name': product.name,
@@ -52,6 +53,7 @@ def add_to_cart():
 
 @cart_bp.route('/api/update', methods=['POST'])
 @login_required
+@tenant_required
 def update_cart():
     data = request.get_json()
     product_id = data.get('product_id')
@@ -60,7 +62,7 @@ def update_cart():
     if quantity <= 0:
         return jsonify({'success': False, 'message': 'Số lượng không hợp lệ'}), 400
 
-    product = Product.query.get(product_id)
+    product = Product.query.filter_by(id=product_id, tenant_id=current_user.tenant_id).first()
     if product and quantity > product.stock:
         return jsonify({'success': False, 'message': f'Chỉ còn {product.stock} sản phẩm trong kho'}), 400
 
@@ -76,6 +78,7 @@ def update_cart():
 
 @cart_bp.route('/api/remove', methods=['POST'])
 @login_required
+@tenant_required
 def remove_from_cart():
     data = request.get_json()
     product_id = data.get('product_id')

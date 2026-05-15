@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SNEAKERS VN{% endblock %}</title>
+    <title>{% block title %}SaaS PoS{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -20,7 +20,11 @@
 <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <a href="/" class="text-2xl font-bold tracking-tight">
-            SNEAKERS <span class="text-xs bg-black text-white px-2 py-1 rounded">VN</span>
+            {% if current_user.is_authenticated and current_user.tenant %}
+                {{ current_user.tenant.name }}
+            {% else %}
+                SaaS <span class="text-xs bg-black text-white px-2 py-1 rounded">PoS</span>
+            {% endif %}
         </a>
 
         <div class="hidden md:flex items-center gap-8 text-sm font-medium">
@@ -82,8 +86,14 @@
 <!-- Footer -->
 <footer class="bg-black text-zinc-400 mt-20 py-12">
     <div class="max-w-7xl mx-auto px-6 text-center">
-        <p class="text-white text-xl font-bold mb-2">SNEAKERS VN</p>
-        <p class="text-sm">© 2024 Sneakers VN. All rights reserved.</p>
+        <p class="text-white text-xl font-bold mb-2">
+            {% if current_user.is_authenticated and current_user.tenant %}
+                {{ current_user.tenant.name }}
+            {% else %}
+                SaaS PoS Platform
+            {% endif %}
+        </p>
+        <p class="text-sm">© 2024 SaaS PoS Platform. All rights reserved.</p>
     </div>
 </footer>
 
