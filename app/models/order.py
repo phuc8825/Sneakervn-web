@@ -6,29 +6,25 @@ class Order(db.Model):
     __tablename__ = 'order'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
     order_code = db.Column(db.String(20), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
     customer_email = db.Column(db.String(150), nullable=False)
-    shipping_address = db.Column(db.Text, nullable=False)
 
     total_amount = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(30), default='pending')
     payment_method = db.Column(db.String(50), default='COD')
-    notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User', backref='orders')
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
 
     STATUS_LABELS = {
         'pending': ('Chờ xử lý', 'yellow'),
-        'confirmed': ('Đã xác nhận', 'blue'),
-        'shipping': ('Đang giao', 'purple'),
-        'delivered': ('Đã giao', 'green'),
+        'completed': ('Hoàn thành', 'green'),
         'cancelled': ('Đã hủy', 'red'),
     }
 

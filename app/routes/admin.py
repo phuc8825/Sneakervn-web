@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.utils.decorators import admin_required
 from app.models.product import Product
@@ -11,7 +11,7 @@ from app import db
 admin_bp = Blueprint('admin', __name__)
 
 CATEGORIES = ['Nam', 'Nữ', 'Unisex', 'Trẻ em']
-ORDER_STATUSES = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled']
+ORDER_STATUSES = ['pending', 'completed', 'cancelled']
 
 
 def allowed_file(filename):
@@ -22,7 +22,6 @@ def allowed_file(filename):
 
 
 def save_image(image_file):
-    """Lưu file ảnh vào thư mục uploads, trả về tên file."""
     if not image_file or not allowed_file(image_file.filename):
         return None
     filename = secure_filename(image_file.filename)
@@ -31,22 +30,20 @@ def save_image(image_file):
     return filename
 
 
-# ─── DASHBOARD ───────────────────────────────────────────────────────────────
-
 @admin_bp.route('/')
 @admin_bp.route('/dashboard')
 @login_required
 @admin_required
 def dashboard():
-    total_products = Product.query.count()
-    total_orders = Order.query.count()
-    total_users = User.query.count()
-    pending_orders = Order.query.filter_by(status='pending').count()
-    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(10).all()
+    total_products = Product.query.filter_by(tenant_id=current_user.tenant_id).count()
+    total_orders = Order.query.filter_by(tenant_id=current_user.tenant_id).count()
+    total_users = User.query.filter_by(tenant_id=current_user.tenant_id).count()
+    pending_orders = Order.query.filter_by(tenant_id=current_user.tenant_id, status='pending').count()
+    recent_orders = Order.query.filter_by(tenant_id=current_user.tenant_id).order_by(Order.created_at.desc()).limit(10).all()
 
     total_revenue = db.session.query(
         db.func.sum(Order.total_amount)
-    ).filter(Order.status == 'delivered').scalar() or 0
+    ).filter(Order.tenant_id == current_user.tenant_id, Order.status == 'completed').scalar() or 0
 
     return render_template(
         'admin/dashboard.html',
@@ -59,8 +56,6 @@ def dashboard():
     )
 
 
-# ─── PRODUCTS ────────────────────────────────────────────────────────────────
-
 @admin_bp.route('/products')
 @login_required
 @admin_required
@@ -68,7 +63,7 @@ def products():
     search = request.args.get('q', '').strip()
     category = request.args.get('category', '')
 
-    query = Product.query
+    query = Product.query.filter_by(tenant_id=current_user.tenant_id)
     if search:
         query = query.filter(Product.name.ilike(f'%{search}%'))
     if category:
@@ -102,21 +97,9 @@ def add_product():
     image_file = request.files.get('image')
     filename = save_image(image_file) or 'default.jpg'
 
-    # Tạo slug từ tên sản phẩm
-    import re, unicodedata
-    slug_base = name.lower()
-    slug_base = unicodedata.normalize('NFD', slug_base)
-    slug_base = ''.join(c for c in slug_base if unicodedata.category(c) != 'Mn')
-    slug_base = re.sub(r'[^a-z0-9]+', '-', slug_base).strip('-')
-    slug = slug_base
-    counter = 1
-    while Product.query.filter_by(slug=slug).first():
-        slug = f"{slug_base}-{counter}"
-        counter += 1
-
     product = Product(
+        tenant_id=current_user.tenant_id,
         name=name,
-        slug=slug,
         price=int(price),
         category=category,
         brand=brand,
@@ -135,7 +118,7 @@ def add_product():
 @login_required
 @admin_required
 def edit_product(id):
-    product = Product.query.get_or_404(id)
+    product = Product.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
 
     if request.method == 'POST':
         product.name = request.form.get('name', product.name).strip()
@@ -163,7 +146,7 @@ def edit_product(id):
 @login_required
 @admin_required
 def delete_product(id):
-    product = Product.query.get_or_404(id)
+    product = Product.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     name = product.name
     db.session.delete(product)
     db.session.commit()
@@ -175,15 +158,13 @@ def delete_product(id):
 @login_required
 @admin_required
 def toggle_product(id):
-    product = Product.query.get_or_404(id)
+    product = Product.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     product.is_active = not product.is_active
     db.session.commit()
     status = 'hiển thị' if product.is_active else 'ẩn'
     flash(f'Đã {status} sản phẩm "{product.name}".', 'success')
     return redirect(url_for('admin.products'))
 
-
-# ─── ORDERS ──────────────────────────────────────────────────────────────────
 
 @admin_bp.route('/orders')
 @login_required
@@ -192,7 +173,7 @@ def orders():
     status = request.args.get('status', '')
     search = request.args.get('q', '').strip()
 
-    query = Order.query
+    query = Order.query.filter_by(tenant_id=current_user.tenant_id)
     if status:
         query = query.filter_by(status=status)
     if search:
@@ -215,7 +196,7 @@ def orders():
 @login_required
 @admin_required
 def order_detail(id):
-    order = Order.query.get_or_404(id)
+    order = Order.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     return render_template('admin/order_detail.html', order=order, statuses=ORDER_STATUSES)
 
 
@@ -223,14 +204,13 @@ def order_detail(id):
 @login_required
 @admin_required
 def update_order_status(id):
-    order = Order.query.get_or_404(id)
+    order = Order.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     new_status = request.form.get('status')
 
     if new_status not in ORDER_STATUSES:
         flash('Trạng thái không hợp lệ!', 'danger')
         return redirect(url_for('admin.order_detail', id=id))
 
-    # Nếu hủy đơn → hoàn lại stock
     if new_status == 'cancelled' and order.status != 'cancelled':
         for item in order.items:
             if item.product:
@@ -242,14 +222,12 @@ def update_order_status(id):
     return redirect(url_for('admin.order_detail', id=id))
 
 
-# ─── USERS ───────────────────────────────────────────────────────────────────
-
 @admin_bp.route('/users')
 @login_required
 @admin_required
 def users():
     search = request.args.get('q', '').strip()
-    query = User.query
+    query = User.query.filter_by(tenant_id=current_user.tenant_id)
     if search:
         query = query.filter(
             User.name.ilike(f'%{search}%') |
@@ -263,7 +241,7 @@ def users():
 @login_required
 @admin_required
 def toggle_user(id):
-    user = User.query.get_or_404(id)
+    user = User.query.filter_by(id=id, tenant_id=current_user.tenant_id).first_or_404()
     user.is_active = not user.is_active
     db.session.commit()
     status = 'kích hoạt' if user.is_active else 'khóa'

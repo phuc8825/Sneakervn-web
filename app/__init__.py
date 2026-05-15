@@ -21,10 +21,14 @@ def create_app():
     login_manager.login_message_category = 'warning'
 
     from app.models.user import User
+    from flask import g, session
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        user = User.query.get(int(user_id))
+        if user:
+            session['tenant_id'] = user.tenant_id
+        return user
 
     # Register blueprints
     from app.routes.auth import auth_bp
