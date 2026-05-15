@@ -14,7 +14,6 @@ def create_app():
 
     db.init_app(app)
     mail.init_app(app)
-
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Vui lòng đăng nhập để tiếp tục.'
@@ -28,15 +27,13 @@ def create_app():
 
     # Register blueprints
     from app.routes.auth import auth_bp
-    from app.routes.product import product_bp
-    from app.routes.cart import cart_bp
-    from app.routes.order import order_bp
+    from app.routes.pos import pos_bp
     from app.routes.admin import admin_bp
+    from app.routes.superadmin import superadmin_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(product_bp)
-    app.register_blueprint(cart_bp, url_prefix='/cart')
-    app.register_blueprint(order_bp, url_prefix='/order')
+    app.register_blueprint(pos_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(superadmin_bp, url_prefix='/superadmin')
 
     return app
